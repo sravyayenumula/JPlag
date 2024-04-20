@@ -59,10 +59,9 @@ public final class CLI {
      */
     public static void main(String[] args) {
         try {
-            logger.debug("Your version of JPlag is {}", JPlag.JPLAG_VERSION);
+            logger.debug("Starting JPlag CLI...");
 
             CLI cli = new CLI();
-
             ParseResult parseResult = cli.parseOptions(args);
 
             if (!parseResult.isUsageHelpRequested() && !(parseResult.subcommand() != null && parseResult.subcommand().isUsageHelpRequested())) {
@@ -72,8 +71,17 @@ public final class CLI {
                 reportObjectFactory.createAndSaveReport(result, cli.getResultFolder());
             }
         } catch (ExitException exception) {
-            logger.error(exception.getMessage()); // do not pass exception here to keep log clean
+            logger.error("Exiting JPlag due to an error: {}", exception.getMessage());
             finalizeLogger();
+            System.exit(1);
+        } catch (CliException exception) {
+            logger.error("Error during command line parsing: {}", exception.getMessage());
+            printUsage();
+            System.exit(1);
+        } catch (Exception exception) {
+            logger.error("An unexpected error occurred: {}", exception.getMessage());
+            // Log the stack trace for debugging purposes
+            logger.debug("Stack trace:", exception);
             System.exit(1);
         }
     }
@@ -216,5 +224,11 @@ public final class CLI {
 
     public String getResultFolder() {
         return this.options.resultFolder;
+    }
+
+    private static void printUsage() {
+        // Print usage instructions
+        System.out.println("Usage: jplag [options]");
+        System.out.println("For help, use: jplag --help");
     }
 }
